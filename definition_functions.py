@@ -38,6 +38,7 @@ def calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times,
     pot_earliest_feasible_arrival_times = []
     arcs_to_j = [ij[0] for ij in g.edges if ij[1] == j]
     print("The following nodes move into {}: {}".format(j, arcs_to_j))
+    inter_parking = []
     for i in arcs_to_j:
         f_ij = earliest_feasible_arrival_times[i, j]
         print("f({}, {}) is: {}".format(i, j, f_ij))
@@ -45,7 +46,8 @@ def calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times,
         f_ij = earliest_feasible_arrival_times[i, j]
         print("p_{}:".format(i), p_i)
         t_ij = g.distance[i, j]
-        parking[i, j] = p_i
+        # parking[i, j] = p_i
+        inter_parking.append(p_i)
         print("current earliest_feasible_arrival_times: ", earliest_feasible_arrival_times)
         print("current parking times: ", parking)
         if p_i is not False and type(p_i) == int:
@@ -55,6 +57,7 @@ def calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times,
             pot_earliest_feasible_arrival_times.append(float('inf'))
         print("pot_earliest_feasible_arrival_times", pot_earliest_feasible_arrival_times)
     earliest_feasible_arrival_times[j, k] = min(pot_earliest_feasible_arrival_times)
+    parking[j, k] = inter_parking[pot_earliest_feasible_arrival_times.index(min(pot_earliest_feasible_arrival_times))]
     print("best i", pot_earliest_feasible_arrival_times.index(min(pot_earliest_feasible_arrival_times)))
     opt_is[j, k] = arcs_to_j[
         pot_earliest_feasible_arrival_times.index(min(pot_earliest_feasible_arrival_times))]
@@ -107,7 +110,8 @@ def do_recursion(g, i, j, earliest_feasible_at, opt_is, earliest_feasible_arriva
             new_earliest_feasible_at = f_i1_i2 + new_p_i + g.distance[curr_prev_arc]
             print("new f({}): ".format((i, j)), new_earliest_feasible_at, "new_p{}: ".format(i), new_p_i)
             earliest_feasible_arrival_times[i, j] = new_earliest_feasible_at
-            parking[curr_prev_arc] = new_p_i
+            # parking[curr_prev_arc] = new_p_i
+            parking[i, j] = new_p_i
         else:
             new_earliest_feasible_at = earliest_feasible_at
         return check_for_feasibility(g, i, j, new_earliest_feasible_at, opt_is,
@@ -125,7 +129,7 @@ def check_for_feasibility(g, i, j, earliest_feasible_at, opt_is, earliest_feasib
         if len(latest_arc) == 0:
             return False
         else:
-            return parking[latest_arc[-1]]
+            return parking[i, j]
 
     # specify time window for parking
     alpha_i = g.f_park_t[i][0]
