@@ -7,12 +7,14 @@ from collections import defaultdict
 
 def build_graph():
     """
-    Define the network for the example in this function
+    Define the network for the example in this function. Note that an additional "artifical"
+    node has to be specified at the very end of the network, where no restrictions in terms of
+    parking exist.
     :return: graph containing the data of the specified example
     """
     # Nodes of the example
     g = Graph()
-    parking_times = [[0, 12], [18, 30], [35, 45], [64, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
+    parking_times = [[0, float('inf')], [18, 30], [35, 45], [64, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
     for i in range(1, 9):
         g.add_node(i, parking_times[i - 1])
 
@@ -29,18 +31,19 @@ def build_graph():
     g.add_edge(5, 2, 20, [30, 80])
     g.add_edge(5, 6, 25, [48, 55])
     g.add_edge(6, 7, 10, [72, 80])
+    # edge from true terminal node to artifical node
     g.add_edge(7, 8, 0, [0, 0])
 
     return g
 
 
-def new_main():
+def main():
     g = build_graph()
     earliest_feasible_arrival_times = dict()
     sink = min(g.nodes)
     terminal = max(g.nodes)
-    opt_is = dict()
-    parking = defaultdict(list)
+    optimal_predecessors = dict()
+    optimal_parking = defaultdict(list)
     arcs_from_sink = [jk[1] for jk in g.edges if jk[0] == sink]
     print("initialize the arcs from the sink")
     for k in arcs_from_sink:
@@ -50,62 +53,19 @@ def new_main():
         arcs_to_k = [jk[0] for jk in g.edges if jk[1] == k]
         print("The following nodes move into {}: {}".format(k, arcs_to_k))
         for j in arcs_to_k:
-            earliest_feasible_arrival_times, opt_is, parking = \
-                calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times, opt_is, parking)
+            earliest_feasible_arrival_times, optimal_predecessors, optimal_parking = \
+                calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times, optimal_predecessors, optimal_parking)
 
-    return earliest_feasible_arrival_times, opt_is, parking
-
-def main():
-    g = build_graph()
-    earliest_feasible_arrival_times = dict()
-    sink = min(g.nodes)
-    terminal = max(g.nodes)
-    opt_is = dict()
-    parking = defaultdict(list)
-    for k in range(sink, terminal + 2):
-        print("The iteration over k is currently at: ", k)
-        # initialize all arcs moving from the sink
-        if k == 1:
-            arcs_from_sink = [jk[1] for jk in g.edges if jk[0] == k]
-            for l in arcs_from_sink:
-                earliest_feasible_arrival_times[k, l] = 0
-        else:
-            arcs_to_k = [jk[0] for jk in g.edges if jk[1] == k]
-            print("The following nodes move into {}: {}".format(k, arcs_to_k))
-            for j in arcs_to_k:
-                print("The iteration over j is currently at: ", j)
-                if j == 1:
-                    # we have initialized all arcs from the sink already
-                    continue
-                pot_earliest_feasible_arrival_times = []
-                arcs_to_j = [ij[0] for ij in g.edges if ij[1] == j]
-                print("The following nodes move into {}: {}".format(j, arcs_to_j))
-                for i in arcs_to_j:
-                    f_ij = earliest_feasible_arrival_times[i, j]
-                    print("f({}, {}) is: {}".format(i, j, f_ij))
-                    p_i = check_for_feasibility(g, i, j, f_ij, opt_is, earliest_feasible_arrival_times, parking)
-                    f_ij = earliest_feasible_arrival_times[i, j]
-                    print("p_{}:".format(i), p_i)
-                    t_ij = g.distance[i, j]
-                    parking[i, j] = p_i
-                    print("current earliest_feasible_arrival_times: ", earliest_feasible_arrival_times)
-                    print("current parking times: ", parking)
-                    if p_i is not False and type(p_i) == int:
-                        print("f_{}; p_{}; t_{}: ".format((i, j), i, (i, j)), f_ij, "; ", p_i, "; ", t_ij)
-                        pot_earliest_feasible_arrival_times.append(f_ij + p_i + t_ij)
-                    else:
-                        pot_earliest_feasible_arrival_times.append(float('inf'))
-                    print("pot_earliest_feasible_arrival_times", pot_earliest_feasible_arrival_times)
-                earliest_feasible_arrival_times[j, k] = min(pot_earliest_feasible_arrival_times)
-                print("best i", pot_earliest_feasible_arrival_times.index(min(pot_earliest_feasible_arrival_times)))
-                opt_is[j, k] = arcs_to_j[
-                    pot_earliest_feasible_arrival_times.index(min(pot_earliest_feasible_arrival_times))]
-            # tour.append((j,k))
-    return earliest_feasible_arrival_times, opt_is, parking
+    return earliest_feasible_arrival_times, optimal_predecessors, optimal_parking
 
 
 if __name__ == "__main__":
     start = time.time()
-    #earliest_feasible_arrival_times, opt_is, parking = main()
-    earliest_feasible_arrival_times, opt_is, parking = new_main()
-    print("Finished. Runtime was: {}".format(time.time() - start))
+    earliest_feasible_arrival_times, opt_is, parking = main()
+    print("Finished. Runtime was: {} \n".format(time.time() - start))
+    print("""The result looks as follows: \n 
+          The earliest feasible arrival times are: {} \n
+          The optimal predecessor nodes per node are: {} \n 
+          And the optimal parking durations at node i for an
+          arc (j,k) are as follows: {}""".format(earliest_feasible_arrival_times,
+                                                 opt_is, parking))
