@@ -1,6 +1,7 @@
 from graph_class import Graph
 from definition_functions import *
 import time
+from definition_functions import Solver
 
 from collections import defaultdict
 
@@ -39,6 +40,7 @@ def build_graph():
 
 def main():
     g = build_graph()
+    sol = Solver(g)
     earliest_feasible_arrival_times = dict()
     sink = min(g.nodes)
     terminal = max(g.nodes)
@@ -47,25 +49,26 @@ def main():
     arcs_from_sink = [jk[1] for jk in g.edges if jk[0] == sink]
     print("initialize the arcs from the sink")
     for k in arcs_from_sink:
-        earliest_feasible_arrival_times[sink, k] = 0
+        sol.earliest_feasible_arrival_times[sink, k] = 0
     for k in g.nodes.difference({sink}):
         print("The iteration over k is currently at: ", k)
         arcs_to_k = [jk[0] for jk in g.edges if jk[1] == k]
         print("The following nodes move into {}: {}".format(k, arcs_to_k))
         for j in arcs_to_k:
-            earliest_feasible_arrival_times, optimal_predecessors, optimal_parking = \
-                calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times, optimal_predecessors, optimal_parking)
-
-    return earliest_feasible_arrival_times, optimal_predecessors, optimal_parking
-
+            #earliest_feasible_arrival_times, optimal_predecessors, optimal_parking = \
+            #    calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times, optimal_predecessors, optimal_parking)
+            sol.calc_min_earliest_arrival_time(j, k)
+    # return earliest_feasible_arrival_times, optimal_predecessors, optimal_parking
+    return sol
 
 if __name__ == "__main__":
     start = time.time()
-    earliest_feasible_arrival_times, opt_is, parking = main()
+    #earliest_feasible_arrival_times, opt_is, parking = main()
+    solution = main()
     print("Finished. Runtime was: {} \n".format(time.time() - start))
-    print("""The result looks as follows: \n 
+    print("""The result looks as follows: \n
           The earliest feasible arrival times are: {} \n
-          The optimal predecessor nodes per node are: {} \n 
+          The optimal predecessor nodes per node are: {} \n
           And the optimal parking durations at node i for an
-          arc (j,k) are as follows: {}""".format(earliest_feasible_arrival_times,
-                                                 opt_is, parking))
+          arc (j,k) are as follows: {}""".format(solution.earliest_feasible_arrival_times,
+                                                 solution.opt_is, solution.parking))
