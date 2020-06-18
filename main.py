@@ -15,7 +15,7 @@ def build_graph():
     """
     # Nodes of the example
     g = Graph()
-    parking_times = [[0, float('inf')], [18, 30], [35, 45], [64, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
+    parking_times = [[0, float('inf')], [18, 30], [35, 45], [66, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
     for i in range(1, 9):
         g.add_node(i, parking_times[i - 1])
 
@@ -42,15 +42,15 @@ def main():
     g = build_graph()
     sol = Solver(g)
     earliest_feasible_arrival_times = dict()
-    sink = min(g.nodes)
+    source = min(g.nodes)
     terminal = max(g.nodes)
     optimal_predecessors = dict()
     optimal_parking = defaultdict(list)
-    arcs_from_sink = [jk[1] for jk in g.edges if jk[0] == sink]
-    print("initialize the arcs from the sink")
-    for k in arcs_from_sink:
-        sol.earliest_feasible_arrival_times[sink, k] = 0
-    for k in g.nodes.difference({sink}):
+    arcs_from_source = [jk[1] for jk in g.edges if jk[0] == source]
+    print("initialize the arcs from the source")
+    for k in arcs_from_source:
+        sol.earliest_feasible_arrival_times[source, k].append(0)
+    for k in g.nodes.difference({source}):
         print("The iteration over k is currently at: ", k)
         arcs_to_k = [jk[0] for jk in g.edges if jk[1] == k]
         print("The following nodes move into {}: {}".format(k, arcs_to_k))
