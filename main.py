@@ -1,9 +1,6 @@
 from graph_class import Graph
-from definition_functions import *
 import time
 from definition_functions import Solver
-
-from collections import defaultdict
 
 
 def build_graph():
@@ -15,7 +12,7 @@ def build_graph():
     """
     # Nodes of the example
     g = Graph()
-    parking_times = [[0, float('inf')], [18, 30], [35, 45], [66, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
+    parking_times = [[0, float('inf')], [18, 30], [35, 45], [64, 75], [35, 50], [64, 75], [0, float('inf')], [0, float('inf')]]
     for i in range(1, 9):
         g.add_node(i, parking_times[i - 1])
 
@@ -41,11 +38,7 @@ def build_graph():
 def main():
     g = build_graph()
     sol = Solver(g)
-    earliest_feasible_arrival_times = dict()
     source = min(g.nodes)
-    terminal = max(g.nodes)
-    optimal_predecessors = dict()
-    optimal_parking = defaultdict(list)
     arcs_from_source = [jk[1] for jk in g.edges if jk[0] == source]
     print("initialize the arcs from the source")
     for k in arcs_from_source:
@@ -55,10 +48,7 @@ def main():
         arcs_to_k = [jk[0] for jk in g.edges if jk[1] == k]
         print("The following nodes move into {}: {}".format(k, arcs_to_k))
         for j in arcs_to_k:
-            #earliest_feasible_arrival_times, optimal_predecessors, optimal_parking = \
-            #    calc_min_earliest_arrival_time(g, j, k, earliest_feasible_arrival_times, optimal_predecessors, optimal_parking)
             sol.calc_min_earliest_arrival_time(j, k)
-    # return earliest_feasible_arrival_times, optimal_predecessors, optimal_parking
     return sol
 
 if __name__ == "__main__":
